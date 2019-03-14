@@ -1,5 +1,5 @@
 FROM ubuntu:bionic
-MAINTAINER romeOz <serggalka@gmail.com>
+MAINTAINER btvk <btuljavamshikiran@gmail.com>
 
 ENV OS_LOCALE="en_US.UTF-8"
 RUN apt-get update && apt-get install -y locales && locale-gen ${OS_LOCALE}
@@ -22,7 +22,7 @@ RUN	\
 	&& add-apt-repository -y ppa:ondrej/php \
 	&& add-apt-repository -y ppa:ondrej/apache2 \
 	&& apt-get update \
-    && apt-get install -y curl apache2 libapache2-mod-php7.3 php7.3-cli php7.3-readline php7.3-mbstring php7.3-zip php7.3-intl php7.3-xml php7.3-json php7.3-curl php7.3-gd php7.3-pgsql php7.3-mysql php-pear \
+    && apt-get install -y curl git apache2 libapache2-mod-php7.3 php7.3-cli php7.3-readline php7.3-mbstring php7.3-zip php7.3-intl php7.3-xml php7.3-json php7.3-curl php7.3-gd php7.3-pgsql php7.3-mysql php-pear \
     # Apache settings
     && cp /dev/null ${APACHE_CONF_DIR}/conf-available/other-vhosts-access-log.conf \
     && rm ${APACHE_CONF_DIR}/sites-enabled/000-default.conf ${APACHE_CONF_DIR}/sites-available/000-default.conf \
@@ -46,6 +46,17 @@ COPY ./configs/php.ini  ${PHP_CONF_DIR}/apache2/conf.d/custom.ini
 WORKDIR /var/www/app/
 
 EXPOSE 80 443
+
+RUN    \
+	apt-get install libapache2-mod-security2
+	&& /etc/init.d/apache2 restart
+	&& mv /etc/modsecurity/modsecurity.conf-recommended  modsecurity.conf
+	&& cd ~
+	&& git clone https://github.com/SpiderLabs/owasp-modsecurity-crs.git
+	&& mv crs-setup.conf.example /etc/modsecurity/crs-setup.conf
+	&& mv rules/ /etc/modsecurity/
+
+
 
 # By default, simply start apache.
 CMD ["/sbin/entrypoint.sh"]
